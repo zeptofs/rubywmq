@@ -91,18 +91,10 @@ extern VALUE wmq_exception;
     MQLONG   already_connected;       /* Already connected means don't disconnect */
     MQLONG   trace_level;             /* Trace level. 0==None, 1==Info 2==Debug ..*/
     MQCNO    connect_options;         /* MQCONNX Connection Options    */
-  #ifdef MQCNO_VERSION_2
     MQCD     client_conn;             /* Client Connection             */
-  #endif
-  #ifdef MQCNO_VERSION_4
     MQSCO    ssl_config_opts;         /* Security options              */
-  #endif
-  #ifdef MQCD_VERSION_6
     MQPTR    long_remote_user_id_ptr;
-  #endif
-  #ifdef MQCD_VERSION_7
     MQPTR    ssl_peer_name_ptr;
-  #endif
   #ifdef MQHB_UNUSABLE_HBAG
     MQHBAG   admin_bag;
     MQHBAG   reply_bag;

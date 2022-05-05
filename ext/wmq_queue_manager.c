@@ -108,12 +108,8 @@ void QUEUE_MANAGER_free(void* p)
         pqm->MQBACK(pqm->hcon, &pqm->comp_code, &pqm->reason_code);
         pqm->MQDISC(&pqm->hcon, &pqm->comp_code, &pqm->reason_code);
     }
-  #ifdef MQCD_VERSION_6
     free(pqm->long_remote_user_id_ptr);
-  #endif
-  #ifdef MQCD_VERSION_7
     free(pqm->ssl_peer_name_ptr);
-  #endif
   #ifdef MQHB_UNUSABLE_HBAG
     if (pqm->admin_bag != MQHB_UNUSABLE_HBAG)
     {
@@ -133,12 +129,8 @@ void QUEUE_MANAGER_free(void* p)
 VALUE QUEUE_MANAGER_alloc(VALUE klass)
 {
     static MQCNO default_MQCNO = {MQCNO_DEFAULT};       /* MQCONNX Connection Options    */
-  #ifdef MQCNO_VERSION_2
     static MQCD  default_MQCD  = {MQCD_CLIENT_CONN_DEFAULT}; /* Client Connection             */
-  #endif
-  #ifdef MQCNO_VERSION_4
     static MQSCO default_MQSCO = {MQSCO_DEFAULT};
-  #endif
 
     PQUEUE_MANAGER pqm = ALLOC(QUEUE_MANAGER);
 
@@ -149,22 +141,14 @@ VALUE QUEUE_MANAGER_alloc(VALUE klass)
     pqm->already_connected = 0;
     pqm->trace_level = 0;
     memcpy(&pqm->connect_options, &default_MQCNO, sizeof(MQCNO));
-  #ifdef MQCNO_VERSION_2
     memcpy(&pqm->client_conn, &default_MQCD, sizeof(MQCD));
 
     /* Tell MQ to use Client Conn structures, etc. */
     pqm->connect_options.Version = MQCNO_CURRENT_VERSION;
     pqm->connect_options.ClientConnPtr = &pqm->client_conn;
-  #endif
-  #ifdef MQCNO_VERSION_4
     memcpy(&pqm->ssl_config_opts, &default_MQSCO, sizeof(MQSCO));
-  #endif
-  #ifdef MQCD_VERSION_6
     pqm->long_remote_user_id_ptr = 0;
-  #endif
-  #ifdef MQCD_VERSION_7
     pqm->ssl_peer_name_ptr = 0;
-  #endif
   #ifdef MQHB_UNUSABLE_HBAG
     pqm->admin_bag = MQHB_UNUSABLE_HBAG;
     pqm->reply_bag = MQHB_UNUSABLE_HBAG;
@@ -228,7 +212,6 @@ VALUE QueueManager_initialize(VALUE self, VALUE hash)
     /*
      * All Client connection parameters are ignored if connection_name is missing
      */
-#ifdef MQCNO_VERSION_2
     int use_system_connection_data = (rb_hash_aref(hash, ID2SYM(ID_use_system_connection_data)) == Qtrue) ? 1 : 0;
 
     if(!NIL_P(rb_hash_aref(hash, ID2SYM(ID_connection_name))) || use_system_connection_data)
@@ -274,7 +257,6 @@ VALUE QueueManager_initialize(VALUE self, VALUE hash)
             WMQ_HASH2MQCHARS(hash,channel_name,            pmqcd->ChannelName)
         }
 
-    #ifdef MQCD_VERSION_4
         WMQ_HASH2MQLONG(hash,heartbeat_interval,          pmqcd->HeartbeatInterval)
         /* TODO:
         WMQ_HASH2MQLONG(hash,exit_name_length,            pmqcd->ExitNameLength)
@@ -286,8 +268,6 @@ VALUE QueueManager_initialize(VALUE self, VALUE hash)
         TO_PTR (receive_exit_ptr,            pmqcd->ReceiveExitPtr)
         TO_PTR (receive_user_data_ptr,       pmqcd->ReceiveUserDataPtr)
         */
-    #endif
-    #ifdef MQCD_VERSION_6
         val = rb_hash_aref(hash, ID2SYM(ID_long_remote_user_id));
         if (!NIL_P(val))
         {
@@ -312,8 +292,6 @@ VALUE QueueManager_initialize(VALUE self, VALUE hash)
         }
         WMQ_HASH2MQBYTES(hash,remote_security_id,          pmqcd->RemoteSecurityId)
         WMQ_HASH2MQCHARS(hash,ssl_cipher_spec,             pmqcd->SSLCipherSpec)
-    #endif
-    #ifdef MQCD_VERSION_7
         val = rb_hash_aref(hash, ID2SYM(ID_ssl_peer_name));
         if (!NIL_P(val))
         {
@@ -351,19 +329,15 @@ VALUE QueueManager_initialize(VALUE self, VALUE hash)
 
             pqm->connect_options.SSLConfigPtr = &pqm->ssl_config_opts;
         }
-    #endif
 
     }
     else
     {
         pqm->is_client_conn = 0;                       /* Set to Server connection */
     }
-#endif
 
-#ifdef MQCNO_VERSION_4
     /* Process MQCNO */
     WMQ_HASH2MQLONG(hash,connect_options,             pqm->connect_options.Options)
-#endif
 
   /* --------------------------------------------------
    * TODO:   MQAIR Structure - LDAP Security
