@@ -103,12 +103,6 @@ void QueueStruct_free(void* p)
 {
     PQUEUE pq = (PQUEUE)p;
     if(pq->trace_level) printf("WMQ::QueueStruct Freeing QUEUE structure\n");
-
-    if (pq->hobj)  /* Valid Q handle means MQCLOSE was not called */
-    {
-        printf("WMQ::Queue#close was not called. Automatically calling close()\n");
-        pq->MQCLOSE(pq->hcon, &pq->hobj, pq->close_options, &pq->comp_code, &pq->reason_code);
-    }
     free(pq->p_buffer);
     free(p);
 }
@@ -247,6 +241,10 @@ VALUE Queue_initialize(VALUE self, VALUE hash)
     VALUE queue_struct = rb_funcall(wmq_queue_struct, ID_new, 0);
     rb_iv_set(self, "@queue_struct", queue_struct);
 
+    VALUE rb_mObjSpace = rb_const_get(rb_cObject, rb_intern("ObjectSpace"));
+    VALUE finalize_proc = rb_funcall(wmq_queue, rb_intern("create_finalizer"), 1, queue_struct);
+    rb_funcall(rb_mObjSpace, rb_intern("define_finalizer"), 2, self, finalize_proc);
+
     pq = Queue_Get_Struct(self);
 
     val = rb_hash_aref(hash, ID2SYM(ID_queue_manager));    /* :queue_manager */
@@ -311,6 +309,23 @@ VALUE Queue_initialize(VALUE self, VALUE hash)
     }
 
     return Qnil;
+}
+
+VALUE Queue_singleton_finalize(int argc, VALUE *argv, VALUE self)
+{
+    VALUE queue_struct;
+    PQUEUE pq;
+
+    rb_scan_args(argc, argv, "1", &queue_struct);
+    Data_Get_Struct(queue_struct, QUEUE, pq);
+
+    if(pq->trace_level) printf("WMQ::Queue finalizing\n");
+
+    if (pq->hobj)  /* Valid Q handle means MQCLOSE was not called */
+    {
+        printf("WMQ::Queue#close was not called. Automatically calling close()\n");
+        pq->MQCLOSE(pq->hcon, &pq->hobj, pq->close_options, &pq->comp_code, &pq->reason_code);
+    }
 }
 
 /*

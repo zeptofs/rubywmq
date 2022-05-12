@@ -58,6 +58,7 @@ VALUE QueueManager_execute(VALUE self, VALUE hash);
 void  Queue_id_init();
 VALUE Queue_initialize(VALUE self, VALUE parms);
 VALUE Queue_singleton_open(int argc, VALUE *argv, VALUE self);
+VALUE Queue_singleton_finalize(int argc, VALUE *argv, VALUE self);
 VALUE Queue_open(VALUE self);
 VALUE Queue_close(VALUE self);
 VALUE Queue_put(VALUE self, VALUE parms);
