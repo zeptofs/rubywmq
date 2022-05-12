@@ -16,8 +16,6 @@ void Init_wmq() {
     rb_define_method(wmq_queue_manager, "initialize", QueueManager_initialize, 1);  /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "connect", QueueManager_connect, 0);        /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "disconnect", QueueManager_disconnect, 0);  /* in wmq_queue_manager.c */
-    rb_define_method(wmq_queue_manager, "open_queue", QueueManager_open_queue, -1); /* in wmq_queue_manager.c */
-    rb_define_method(wmq_queue_manager, "access_queue", QueueManager_open_queue, -1); /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "begin", QueueManager_begin, 0);            /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "commit", QueueManager_commit, 0);          /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "backout", QueueManager_backout, 0);        /* in wmq_queue_manager.c */
@@ -31,7 +29,6 @@ void Init_wmq() {
     rb_define_method(wmq_queue_manager, "execute", QueueManager_execute, 1);        /* in wmq_queue_manager.c */
 
     wmq_queue = rb_define_class_under(wmq, "Queue", rb_cObject);
-    rb_define_singleton_method(wmq_queue, "open", Queue_singleton_open, -1);        /* in wmq_queue.c */
     rb_define_singleton_method(wmq_queue, "finalize", Queue_singleton_finalize, -1);/* in wmq_queue.c */
     rb_define_method(wmq_queue, "initialize", Queue_initialize, 1);                 /* in wmq_queue.c */
     rb_define_method(wmq_queue, "open", Queue_open, 0);                             /* in wmq_queue.c */

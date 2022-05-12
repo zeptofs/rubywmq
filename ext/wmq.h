@@ -38,7 +38,6 @@ void QueueManager_id_init();
 void QueueManager_selector_id_init();
 void QueueManager_command_id_init();
 VALUE QUEUE_MANAGER_alloc(VALUE klass);
-VALUE QueueManager_open_queue(int argc, VALUE *argv, VALUE self);
 VALUE QueueManager_initialize(VALUE self, VALUE parms);
 VALUE QueueManager_connect(VALUE self);
 VALUE QueueManager_disconnect(VALUE self);
@@ -56,7 +55,6 @@ VALUE QueueManager_execute(VALUE self, VALUE hash);
 
 void  Queue_id_init();
 VALUE Queue_initialize(VALUE self, VALUE parms);
-VALUE Queue_singleton_open(int argc, VALUE *argv, VALUE self);
 VALUE Queue_singleton_finalize(int argc, VALUE *argv, VALUE self);
 VALUE Queue_open(VALUE self);
 VALUE Queue_close(VALUE self);
