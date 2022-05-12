@@ -13,7 +13,6 @@ void Init_wmq() {
 
     wmq_queue_manager = rb_define_class_under(wmq, "QueueManager", rb_cObject);
     rb_define_alloc_func(wmq_queue_manager, QUEUE_MANAGER_alloc);
-    rb_define_singleton_method(wmq_queue_manager, "connect", QueueManager_singleton_connect, -1); /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "initialize", QueueManager_initialize, 1);  /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "connect", QueueManager_connect, 0);        /* in wmq_queue_manager.c */
     rb_define_method(wmq_queue_manager, "disconnect", QueueManager_disconnect, 0);  /* in wmq_queue_manager.c */
