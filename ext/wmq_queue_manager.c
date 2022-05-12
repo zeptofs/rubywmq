@@ -976,52 +976,6 @@ VALUE QueueManager_name(VALUE self)
     return rb_iv_get(self,"@name");
 }
 
-static VALUE QueueManager_open_queue_block(VALUE message, VALUE proc)
-{
-    return rb_funcall(proc, ID_call, 1, message);
-}
-
-static VALUE QueueManager_open_queue_each(VALUE parameters)
-{
-    return Queue_singleton_open(1, &parameters, wmq_queue);
-}
-
-/*
- * call-seq:
- *   open_queue(...)
- *   access_queue(...)
- *
- * Open the specified queue, then close it once the
- * supplied code block has completed
- *
- * Parameters:
- * * Since the number of parameters can vary dramatically, all parameters are passed by name in a hash
- * * See Queue.open for the complete list of parameters, except that :queue_manager is *not* required
- *   since it is supplied automatically by this method
- *
- * Example:
- *   require 'wmq/wmq_client'
- *
- *   WMQ::QueueManager.connect(q_mgr_name: 'REID', connection_name: 'localhost(1414)') do |qmgr|
- *     qmgr.open_queue(q_name: 'TEST.QUEUE', mode: :output) do |queue|
- *       queue.put(data: 'Hello World')
- *     end
- *   end
- */
-VALUE QueueManager_open_queue(int argc, VALUE *argv, VALUE self)
-{
-    VALUE parameters;
-    VALUE proc;
-
-    /* Extract parameters and code block (Proc) */
-    rb_scan_args(argc, argv, "1&", &parameters, &proc);
-
-    Check_Type(parameters, T_HASH);
-    rb_hash_aset(parameters, ID2SYM(ID_queue_manager), self);
-
-    return rb_iterate(QueueManager_open_queue_each, parameters, QueueManager_open_queue_block, proc);
-}
-
 /* What can I say, Ruby blocks have spoilt me :)  */
 #define CHECK_COMPLETION_CODE(ACTION)                                                     \
 if(pqm->trace_level > 1)                                                                  \
