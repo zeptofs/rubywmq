@@ -33,6 +33,7 @@ void Init_wmq() {
 
     wmq_queue = rb_define_class_under(wmq, "Queue", rb_cObject);
     rb_define_singleton_method(wmq_queue, "open", Queue_singleton_open, -1);        /* in wmq_queue.c */
+    rb_define_singleton_method(wmq_queue, "finalize", Queue_singleton_finalize, -1);/* in wmq_queue.c */
     rb_define_method(wmq_queue, "initialize", Queue_initialize, 1);                 /* in wmq_queue.c */
     rb_define_method(wmq_queue, "open", Queue_open, 0);                             /* in wmq_queue.c */
     rb_define_method(wmq_queue, "close", Queue_close, 0);                           /* in wmq_queue.c */
