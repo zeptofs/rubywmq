@@ -99,10 +99,10 @@ void Queue_id_init()
  * C Structure to store MQ data types and other
  *   C internal values
  * --------------------------------------------------*/
-void QUEUE_free(void* p)
+void QueueStruct_free(void* p)
 {
     PQUEUE pq = (PQUEUE)p;
-    if(pq->trace_level) printf("WMQ::Queue Freeing QUEUE structure\n");
+    if(pq->trace_level) printf("WMQ::QueueStruct Freeing QUEUE structure\n");
 
     if (pq->hobj)  /* Valid Q handle means MQCLOSE was not called */
     {
@@ -113,7 +113,7 @@ void QUEUE_free(void* p)
     free(p);
 }
 
-VALUE QUEUE_alloc(VALUE klass)
+VALUE QueueStruct_alloc(VALUE klass)
 {
     static MQOD default_MQOD = {MQOD_DEFAULT};
     PQUEUE pq = ALLOC(QUEUE);
@@ -132,7 +132,14 @@ VALUE QUEUE_alloc(VALUE klass)
     pq->buffer_size = 16384;
     pq->p_buffer = ALLOC_N(unsigned char, pq->buffer_size);
 
-    return Data_Wrap_Struct(klass, 0, QUEUE_free, pq);
+    return Data_Wrap_Struct(klass, 0, QueueStruct_free, pq);
+}
+
+PQUEUE Queue_Get_Struct(VALUE self)
+{
+    PQUEUE pq;
+    Data_Get_Struct(rb_iv_get(self, "@queue_struct"), QUEUE, pq);
+    return pq;
 }
 
 static MQLONG Queue_extract_open_options(VALUE hash, VALUE name)
@@ -237,7 +244,10 @@ VALUE Queue_initialize(VALUE self, VALUE hash)
 
     Check_Type(hash, T_HASH);
 
-    Data_Get_Struct(self, QUEUE, pq);
+    VALUE queue_struct = rb_funcall(wmq_queue_struct, ID_new, 0);
+    rb_iv_set(self, "@queue_struct", queue_struct);
+
+    pq = Queue_Get_Struct(self);
 
     val = rb_hash_aref(hash, ID2SYM(ID_queue_manager));    /* :queue_manager */
     if (NIL_P(val))
@@ -387,7 +397,7 @@ VALUE Queue_open(VALUE self)
     VALUE          queue_manager;
     PQUEUE_MANAGER pqm;
     PQUEUE         pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
 
     name = rb_iv_get(self,"@original_name");          /* Always open original name */
     if (NIL_P(name))
@@ -510,7 +520,7 @@ VALUE Queue_open(VALUE self)
 VALUE Queue_close(VALUE self)
 {
     PQUEUE pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
 
     /* Check if queue is open */
     if (!pq->hcon)
@@ -674,7 +684,7 @@ VALUE Queue_get(VALUE self, VALUE hash)
 
     Check_Type(hash, T_HASH);
 
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
 
     /* Automatically open the queue if not already open */
     if (!pq->hcon && (Queue_open(self) == Qfalse))
@@ -934,7 +944,7 @@ VALUE Queue_put(VALUE self, VALUE hash)
 
     Check_Type(hash, T_HASH);
 
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
 
     /* Automatically open the queue if not already open */
     if (!pq->hcon && (Queue_open(self) == Qfalse))
@@ -993,7 +1003,7 @@ VALUE Queue_name(VALUE self)
 {
     /* If Queue is open, return opened name, otherwise return original name */
     PQUEUE pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
     if (pq->hobj)
     {
         return rb_iv_get(self,"@name");
@@ -1249,7 +1259,7 @@ VALUE Queue_each(int argc, VALUE *argv, VALUE self)
     MQLONG browse = 0;
 
     PQUEUE pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
 
     /* Extract parameters and code block (Proc) */
     rb_scan_args(argc, argv, "01&", &hash, &proc);
@@ -1334,7 +1344,7 @@ VALUE Queue_each(int argc, VALUE *argv, VALUE self)
 VALUE Queue_comp_code(VALUE self)
 {
     PQUEUE pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
     return LONG2NUM(pq->comp_code);
 }
 
@@ -1352,7 +1362,7 @@ VALUE Queue_comp_code(VALUE self)
 VALUE Queue_reason_code(VALUE self)
 {
     PQUEUE pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
     return LONG2NUM(pq->reason_code);
 }
 
@@ -1370,7 +1380,7 @@ VALUE Queue_reason_code(VALUE self)
 VALUE Queue_reason(VALUE self)
 {
     PQUEUE pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
     return rb_str_new2(wmq_reason(pq->reason_code));
 }
 
@@ -1384,7 +1394,7 @@ VALUE Queue_reason(VALUE self)
 VALUE Queue_open_q(VALUE self)
 {
     PQUEUE pq;
-    Data_Get_Struct(self, QUEUE, pq);
+    pq = Queue_Get_Struct(self);
     if (pq->hobj)
     {
         return Qtrue;

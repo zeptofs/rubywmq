@@ -56,7 +56,6 @@ VALUE QueueManager_name(VALUE self);
 VALUE QueueManager_execute(VALUE self, VALUE hash);
 
 void  Queue_id_init();
-VALUE QUEUE_alloc(VALUE klass);
 VALUE Queue_initialize(VALUE self, VALUE parms);
 VALUE Queue_singleton_open(int argc, VALUE *argv, VALUE self);
 VALUE Queue_open(VALUE self);
@@ -72,7 +71,10 @@ VALUE Queue_open_q(VALUE self);
 
 void Queue_extract_put_message_options(VALUE hash, PMQPMO ppmo);
 
+VALUE QueueStruct_alloc(VALUE self);
+
 extern VALUE wmq_queue;
+extern VALUE wmq_queue_struct;
 extern VALUE wmq_queue_manager;
 extern VALUE wmq_message;
 extern VALUE wmq_exception;

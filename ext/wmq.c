@@ -1,6 +1,7 @@
 #include "wmq.h"
 
 VALUE wmq_queue;
+VALUE wmq_queue_struct;
 VALUE wmq_queue_manager;
 VALUE wmq_message;
 VALUE wmq_exception;
@@ -31,7 +32,6 @@ void Init_wmq() {
     rb_define_method(wmq_queue_manager, "execute", QueueManager_execute, 1);        /* in wmq_queue_manager.c */
 
     wmq_queue = rb_define_class_under(wmq, "Queue", rb_cObject);
-    rb_define_alloc_func(wmq_queue, QUEUE_alloc);
     rb_define_singleton_method(wmq_queue, "open", Queue_singleton_open, -1);        /* in wmq_queue.c */
     rb_define_method(wmq_queue, "initialize", Queue_initialize, 1);                 /* in wmq_queue.c */
     rb_define_method(wmq_queue, "open", Queue_open, 0);                             /* in wmq_queue.c */
@@ -44,6 +44,9 @@ void Init_wmq() {
     rb_define_method(wmq_queue, "reason_code", Queue_reason_code, 0);               /* in wmq_queue.c */
     rb_define_method(wmq_queue, "reason", Queue_reason, 0);                         /* in wmq_queue.c */
     rb_define_method(wmq_queue, "open?", Queue_open_q, 0);                          /* in wmq_queue.c */
+
+    wmq_queue_struct = rb_define_class_under(wmq, "QueueStruct", rb_cObject);
+    rb_define_alloc_func(wmq_queue_struct, QueueStruct_alloc);
 
     wmq_message = rb_define_class_under(wmq, "Message", rb_cObject);
     rb_define_method(wmq_message, "initialize", Message_initialize, -1);            /* in wmq_message.c */
