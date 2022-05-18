@@ -157,6 +157,9 @@ module WMQ
           queue_manager.backout
           raise
         ensure
+          # Backout before automatically disconnecting, as a call to MQDISC commits, which could be surprising.
+          # Require the application to always explictly call #commit.
+          queue_manager.backout
           queue_manager.disconnect
         end
       end
