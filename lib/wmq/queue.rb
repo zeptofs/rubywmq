@@ -182,10 +182,11 @@ module WMQ
       queue
     end
 
-    def self.create_finalizer(queue_struct)
-      # Create finalizer proc that captures queue_struct
+    def self.create_finalizer(queue_struct, queue_manager)
+      # Create finalizer proc that captures queue_struct (which we need to call MQCLOSE), and queue_manager (which we
+      # need to prevent from being freed until after we call MQCLOSE, otherwise we'll segfault).
       proc {
-        Queue.finalize(queue_struct)
+        Queue.finalize(queue_struct, queue_manager)
       }
     end
   end

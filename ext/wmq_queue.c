@@ -241,10 +241,6 @@ VALUE Queue_initialize(VALUE self, VALUE hash)
     VALUE queue_struct = rb_funcall(wmq_queue_struct, ID_new, 0);
     rb_iv_set(self, "@queue_struct", queue_struct);
 
-    VALUE rb_mObjSpace = rb_const_get(rb_cObject, rb_intern("ObjectSpace"));
-    VALUE finalize_proc = rb_funcall(wmq_queue, rb_intern("create_finalizer"), 1, queue_struct);
-    rb_funcall(rb_mObjSpace, rb_intern("define_finalizer"), 2, self, finalize_proc);
-
     pq = Queue_Get_Struct(self);
 
     val = rb_hash_aref(hash, ID2SYM(ID_queue_manager));    /* :queue_manager */
@@ -252,15 +248,16 @@ VALUE Queue_initialize(VALUE self, VALUE hash)
     {
         rb_raise(rb_eArgError, "Mandatory parameter :queue_manager missing from WMQ::Queue::new");
     }
-    else
-    {
-        PQUEUE_MANAGER pqm;
-        Data_Get_Struct(val, QUEUE_MANAGER, pqm);
-        pq->exception_on_error = pqm->exception_on_error;  /* Copy exception_on_error from Queue Manager setting */
-        pq->trace_level        = pqm->trace_level;  /* Copy trace_level from Queue Manager setting */
+    PQUEUE_MANAGER pqm;
+    Data_Get_Struct(val, QUEUE_MANAGER, pqm);
+    pq->exception_on_error = pqm->exception_on_error;  /* Copy exception_on_error from Queue Manager setting */
+    pq->trace_level        = pqm->trace_level;  /* Copy trace_level from Queue Manager setting */
 
-        rb_iv_set(self, "@queue_manager", val);
-    }
+    rb_iv_set(self, "@queue_manager", val);
+
+    VALUE rb_mObjSpace = rb_const_get(rb_cObject, rb_intern("ObjectSpace"));
+    VALUE finalize_proc = rb_funcall(wmq_queue, rb_intern("create_finalizer"), 2, queue_struct, val);
+    rb_funcall(rb_mObjSpace, rb_intern("define_finalizer"), 2, self, finalize_proc);
 
     q_name = rb_hash_aref(hash, ID2SYM(ID_q_name));            /* :q_name */
     if (NIL_P(q_name))
@@ -314,9 +311,10 @@ VALUE Queue_initialize(VALUE self, VALUE hash)
 VALUE Queue_singleton_finalize(int argc, VALUE *argv, VALUE self)
 {
     VALUE queue_struct;
+    VALUE queue_manager;
     PQUEUE pq;
 
-    rb_scan_args(argc, argv, "1", &queue_struct);
+    rb_scan_args(argc, argv, "2", &queue_struct, &queue_manager);
     Data_Get_Struct(queue_struct, QUEUE, pq);
 
     if(pq->trace_level) printf("WMQ::Queue finalizing\n");
