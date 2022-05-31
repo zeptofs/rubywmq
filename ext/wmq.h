@@ -325,22 +325,10 @@ void   wmq_selector(ID selector_id, PMQLONG selector_type, PMQLONG selector);
     rb_hash_aset(HASH, ID2SYM(ID_##KEY), LONG2NUM(ELEMENT));
 
 /* --------------------------------------------------
- * Trailing Spaces are important with binary fields
+ * Trailing nulls and spaces are important with binary fields
  * --------------------------------------------------*/
 #define WMQ_MQBYTES2STR(ELEMENT,TARGET)  \
-    size = sizeof(ELEMENT);           \
-    length = 0;                       \
-    pChar = ELEMENT + size-1;         \
-    for (i = size; i > 0; i--)        \
-    {                                 \
-        if (*pChar != 0)              \
-        {                             \
-            length = i;               \
-            break;                    \
-        }                             \
-        pChar--;                      \
-    }                                 \
-    TARGET = rb_str_new(ELEMENT,length);
+    TARGET = rb_str_new(ELEMENT,sizeof(ELEMENT));
 
 #define WMQ_MQBYTES2HASH(HASH,KEY,ELEMENT)  \
     WMQ_MQBYTES2STR(ELEMENT, str)           \
