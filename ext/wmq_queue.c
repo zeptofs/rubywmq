@@ -794,6 +794,17 @@ VALUE Queue_get(VALUE self, VALUE hash)
 
     if (pq->comp_code != MQCC_FAILED)
     {
+        /*
+         * Sanity check that the message is in the expected encoding, otherwise decoding will fail with errors due to
+         * mismatched number formats.
+         */
+        if (md.Encoding != MQENC_NATIVE) {
+            rb_raise(wmq_exception,
+                     "WMQ::Queue#get(). Received message in unexpected encoding. Native encoding: %i, received encoding: %i",
+                     MQENC_NATIVE,
+                     md.Encoding);
+        }
+
         Message_deblock(message, &md, pq->p_buffer, messlen, pq->trace_level);  /* Extract MQMD and any other known MQ headers */
         return Qtrue;
     }
