@@ -772,20 +772,14 @@ VALUE Queue_get(VALUE self, VALUE hash)
               &pq->comp_code,      /* completion code                   */
               &pq->reason_code);   /* reason code                       */
 
-        /* report reason, if any     */
-        if (pq->reason_code != MQRC_NONE)
+        if (pq->reason_code == MQRC_TRUNCATED_MSG_FAILED)
         {
-            if(pq->trace_level>1) printf("WMQ::Queue#get() Growing buffer size from %ld to %ld\n", (long)pq->buffer_size, (long)messlen);
-            /* TODO: Add support for autogrow buffer here */
-            if (pq->reason_code == MQRC_TRUNCATED_MSG_FAILED)
-            {
-                if(pq->trace_level>2)
-                    printf ("WMQ::Queue#reallocate Resizing buffer from %ld to %ld bytes\n", (long)pq->buffer_size, (long)messlen);
+            if(pq->trace_level>2)
+                printf ("WMQ::Queue#reallocate Resizing buffer from %ld to %ld bytes\n", (long)pq->buffer_size, (long)messlen);
 
-                free(pq->p_buffer);
-                pq->buffer_size = messlen;
-                pq->p_buffer = ALLOC_N(unsigned char, messlen);
-            }
+            free(pq->p_buffer);
+            pq->buffer_size = messlen;
+            pq->p_buffer = ALLOC_N(unsigned char, messlen);
         }
     }
     while (pq->reason_code == MQRC_TRUNCATED_MSG_FAILED);
