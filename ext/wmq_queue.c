@@ -792,7 +792,7 @@ VALUE Queue_get(VALUE self, VALUE hash)
 
     if(pq->trace_level) printf("WMQ::Queue#get() MQGET ended with reason:%s\n", wmq_reason(pq->reason_code));
 
-    if (pq->comp_code != MQCC_FAILED)
+    if (pq->comp_code == MQCC_OK)
     {
         /*
          * Sanity check that the message is in the expected encoding, otherwise decoding will fail with errors due to
