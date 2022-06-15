@@ -689,10 +689,9 @@ VALUE Queue_get(VALUE self, VALUE hash)
     MQLONG   flag;
     MQLONG   messlen;                /* message length received       */
 
-    MQMD     md = {MQMD_DEFAULT};    /* Message Descriptor            */
+    static const MQMD md_def = {MQMD_DEFAULT};
     MQGMO   gmo = {MQGMO_DEFAULT};   /* get message options           */
 
-    md.Version = MQMD_CURRENT_VERSION;   /* Allow Group Options       */
     gmo.Version = MQGMO_CURRENT_VERSION; /* Allow MatchOptions        */
 
     Check_Type(hash, T_HASH);
@@ -714,8 +713,6 @@ VALUE Queue_get(VALUE self, VALUE hash)
                  "Mandatory key :message is missing from hash passed to get() for Queue: %s",
                  RSTRING_PTR(name));
     }
-
-    Message_build_mqmd(message, &md);
 
     WMQ_HASH2MQLONG(hash,options, gmo.Options)          /* :options */
 
@@ -743,15 +740,6 @@ VALUE Queue_get(VALUE self, VALUE hash)
 
     WMQ_HASH2MQLONG(hash,match, gmo.MatchOptions)                  /* :match */
 
-    if(pq->trace_level > 1) printf("WMQ::Queue#get() Get Message Option: MatchOptions=%ld\n", (long)gmo.MatchOptions);
-    if(pq->trace_level) printf("WMQ::Queue#get() Queue Handle:%ld, Queue Manager Handle:%ld\n", (long)pq->hobj, (long)pq->hcon);
-
-    /* If descriptor is re-used
-
-     md.Encoding       = MQENC_NATIVE;
-     md.CodedCharSetId = MQCCSI_Q_MGR;
-    */
-
     /*
      * Auto-Grow buffer size
      *
@@ -759,8 +747,23 @@ VALUE Queue_get(VALUE self, VALUE hash)
      *       message. The next message could be say 80,000 bytes in size, we need to
      *       grow the buffer again.
      */
+    MQMD md;
     do
     {
+        /*
+         * Reinitialize md if we're retrying after a buffer resize. Some of the MQMD fields, like Encoding are both
+         * input AND output fields. If the request fails due to MQRC_TRUNCATED_MSG_FAILED, the conversion won't happen
+         * and md.Encoding will be set to the pre-conversion encoding. If we re-send the same md value, we end up
+         * requesting that encoding instead of the native encoding we wanted.
+         */
+        md = md_def;
+        md.Version = MQMD_CURRENT_VERSION;
+
+        Message_build_mqmd(message, &md);
+
+        if(pq->trace_level > 1) printf("WMQ::Queue#get() Get Message Option: MatchOptions=%ld\n", (long)gmo.MatchOptions);
+        if(pq->trace_level) printf("WMQ::Queue#get() Queue Handle:%ld, Queue Manager Handle:%ld\n", (long)pq->hobj, (long)pq->hcon);
+
         pq->MQGET(
               pq->hcon,            /* connection handle                 */
               pq->hobj,            /* object handle                     */
