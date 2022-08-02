@@ -40,6 +40,7 @@ module WMQ
     #   # SSL Options
     #   key_repository:      '/var/mqm/qmgrs/.../key',        # MQSCO.KeyRepository
     #   crypto_hardware:     'GSK_ACCELERATOR_NCIPHER_NF_ON', # MQSCO.CryptoHardware
+    #   certificate_label:   'myclientcert',                  # MQSCO.CertificateLabel
     #   )
     #
     # Optional Parameters
