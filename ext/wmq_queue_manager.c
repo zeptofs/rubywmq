@@ -33,11 +33,12 @@ static ID ID_remote_security_id;
 static ID ID_ssl_cipher_spec;
 static ID ID_ssl_peer_name;
 static ID ID_keep_alive_interval;
-static ID ID_crypto_hardware;
 static ID ID_use_system_connection_data;
 
 /* MQSCO ID's */
 static ID ID_key_repository;
+static ID ID_crypto_hardware;
+static ID ID_certificate_label;
 
 /* Admin ID's */
 static ID ID_create_queue;
@@ -84,6 +85,7 @@ void QueueManager_id_init(void)
     /* MQSCO ID's */
     ID_key_repository       = rb_intern("key_repository");
     ID_crypto_hardware      = rb_intern("crypto_hardware");
+    ID_certificate_label    = rb_intern("certificate_label");
 
     /* Admin ID's */
     ID_create_queue         = rb_intern("create_queue");
@@ -144,14 +146,17 @@ VALUE QUEUE_MANAGER_alloc(VALUE klass)
     pqm->already_connected = 0;
     pqm->trace_level = 0;
     memcpy(&pqm->connect_options, &default_MQCNO, sizeof(MQCNO));
+    pqm->connect_options.Version = MQCNO_CURRENT_VERSION;
     memcpy(&pqm->security_parameters, &default_MQCSP, sizeof(MQCSP));
+    pqm->security_parameters.Version = MQCSP_CURRENT_VERSION;
     memcpy(&pqm->client_conn, &default_MQCD, sizeof(MQCD));
+    pqm->client_conn.Version = MQCD_CURRENT_VERSION;
+    memcpy(&pqm->ssl_config_opts, &default_MQSCO, sizeof(MQSCO));
+    pqm->ssl_config_opts.Version = MQSCO_CURRENT_VERSION;
 
     /* Tell MQ to use Client Conn structures, etc. */
-    pqm->connect_options.Version = MQCNO_CURRENT_VERSION;
     pqm->connect_options.ClientConnPtr = &pqm->client_conn;
     pqm->connect_options.SecurityParmsPtr = &pqm->security_parameters;
-    memcpy(&pqm->ssl_config_opts, &default_MQSCO, sizeof(MQSCO));
     pqm->long_remote_user_id_ptr = 0;
     pqm->ssl_peer_name_ptr = 0;
   #ifdef MQHB_UNUSABLE_HBAG
@@ -347,11 +352,13 @@ VALUE QueueManager_initialize(VALUE self, VALUE hash)
         * Any SSL info in the client channel definition tables is also ignored
         */
         if (!NIL_P(rb_hash_aref(hash, ID2SYM(ID_key_repository))) ||
-            !NIL_P(rb_hash_aref(hash, ID2SYM(ID_crypto_hardware))))
+            !NIL_P(rb_hash_aref(hash, ID2SYM(ID_crypto_hardware))) ||
+            !NIL_P(rb_hash_aref(hash, ID2SYM(ID_certificate_label))))
         {
             /* Process MQSCO */
             WMQ_HASH2MQCHARS(hash,key_repository,              pqm->ssl_config_opts.KeyRepository)
             WMQ_HASH2MQCHARS(hash,crypto_hardware,             pqm->ssl_config_opts.CryptoHardware)
+            WMQ_HASH2MQCHARS(hash,certificate_label,           pqm->ssl_config_opts.CertificateLabel)
 
             pqm->connect_options.SSLConfigPtr = &pqm->ssl_config_opts;
         }
