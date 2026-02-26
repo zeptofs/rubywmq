@@ -23,5 +23,8 @@ if RbConfig::CONFIG["RPATHFLAG"].to_s.empty? && try_link('int main() {return 0;}
   $LDFLAGS << rpath_flags
 end
 
+# Suppress errors from strict clang warnings on ARM64 macOS
+$CFLAGS << " -Wno-incompatible-function-pointer-types -Wno-int-conversion"
+
 # Generate Makefile
 create_makefile('wmq/wmq')
